@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
+from utils import make_motortime_shorter
 
 #%% [markdown]
 # ## Set random seed for reproducibility
@@ -27,16 +28,14 @@ print(df.head())
 # ## Run Monte Carlo simulation
 for trial in range(n_trials):
     # Generate failure times for components
-    motor_time = np.random.poisson(5000)
-    sensor_time = np.random.normal(6000, 100)
+    motor_time = np.random.poisson(7000)
+    sensor_time = np.random.normal(5000, 100)
     control_time = np.random.uniform(4000, 8000)
 
     # Apply condition: sensor failure reduces motor time, but only if the reduced time
     # would not be less than the sensor time
-    if sensor_time < motor_time:
-        potential_motor_time = motor_time - 1000
-        if potential_motor_time >= sensor_time:
-            motor_time = potential_motor_time
+    # wir haben genug zeit
+    motor_time = make_motortime_shorter(sensor_time, motor_time)
 
     # Calculate vehicle failure time (min of motor or control unit)
     vehicle_failure = min(motor_time, control_time)
@@ -81,6 +80,7 @@ plt.show()
 early_failures = df[df['vehicle_failure'] < 5000]
 total_early_failures = len(early_failures)
 
+print(total_early_failures)
 # Calculate probabilities for each component
 probabilities = {
     'motor': len(early_failures[early_failures['motor'] < 5000]) / total_early_failures,
